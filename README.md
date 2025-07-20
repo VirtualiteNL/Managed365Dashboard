@@ -29,23 +29,32 @@ It generates a complete Fluent UI-style HTML report containing:
 ### 📦 Required PowerShell Modules
 
 | Module                          | Install command                                         |
-|---------------------------------|----------------------------------------------------------|
-| Microsoft.Graph                 | `Install-Module Microsoft.Graph -Scope CurrentUser`     |
-| Microsoft.Graph.Identity.SignIns | Included in base Graph module                          |
-| ExchangeOnlineManagement        | `Install-Module ExchangeOnlineManagement` *(optional)*  |
+|---------------------------------|---------------------------------------------------------|
+### 🔐 Required Microsoft Graph API Permissions
+
+The following **Microsoft Graph Permissions** are required for full functionality of the Managed 365 Dashboard:
+
+| Scope                                             | Purpose                                                                |
+|---------------------------------------------------|-------------------------------------------------------------------------|
+| `Application.Read.All`                            | Detect inactive apps, secrets, certificates                             |
+| `Directory.Read.All`                              | Retrieve users, groups, roles, devices, compliance                      |
+| `User.Read.All`                                   | Resolve UPNs, names, sign-in relationships                              |
+| `RoleManagement.Read.Directory`                   | Detect privileged role assignments                                      |
+| `ServiceHealth.Read.All`                          | Read current service health status                                      |
+| `ServiceMessage.Read.All`                         | Retrieve service announcements                                          |
+| `Policy.Read.All`                                 | Read Conditional Access and other policy settings                       |
+| `DeviceManagementConfiguration.Read.All`          | Analyze configuration profiles (classic Intune)                         |
+| `DeviceManagementManagedDevices.Read.All`         | Check device compliance and non-compliant states                        |
+| `DeviceManagementApps.Read.All`                   | Detect Apple MDM Push certificate status                                |
+| `DeviceManagementServiceConfig.ReadWrite.All`     | Needed to access fallback MDM settings via Graph (read is insufficient) |
+| `AuditLog.Read.All`                               | Retrieve sign-in events, password resets, directory audit logs          |
+| `IdentityRiskEvent.Read.All`                      | Risky user detection and identity protection alerts                     |
+| `UserAuthenticationMethod.Read.All`               | Detect registered MFA methods per user                                  |
+| `DeviceManagementConfiguration.ReadWrite.All`     | Required for modern settings fallback in config profile checks          |
+| `Reports.Read.All`                                | Used for sign-in reports and high-level tenant summaries                |
+
 
 > Make sure to `Connect-MgGraph` with required scopes or use App Registration with permissions.
-
----
-
-## 🔐 Required Microsoft Graph Permissions
-
-| Scope                          | Purpose                                  |
-|--------------------------------|-------------------------------------------|
-| `AuditLog.Read.All`            | For sign-ins and risk detection logs     |
-| `Directory.Read.All`           | For user/role/device/compliance info     |
-| `User.Read.All`                | To resolve UPNs and display names        |
-| `RoleManagement.Read.Directory`| To detect role assignments               |
 
 ---
 
@@ -95,6 +104,11 @@ Lists all password reset events triggered for the user within the past 30 days.
 ### 🕓 UserRisk IOC 6 – Recently created accounts  
 Detects if the user account is less than 7 days old.  
 🔸 **Risk**: Newly created accounts may indicate staging for future abuse or misconfiguration.
+
+### 🛡️ UserRisk IOC 7 – Not protected by Conditional Access
+Checks if the user is covered by at least one active Conditional Access policy that enforces MFA, compliant devices, domain-joined devices, or authentication strength.
+It also evaluates whether the policy targets the user directly, via group or role membership, and warns if the policy does not apply to all cloud apps.
+🔸 **Risk**: Users not protected by strong Conditional Access policies are more vulnerable to phishing, session hijacking, or access from unmanaged devices.
 
 > More IOC modules can be added in `userrisk.ps1`.
 
